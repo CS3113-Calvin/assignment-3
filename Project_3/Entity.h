@@ -1,21 +1,27 @@
 #pragma once
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "ShaderProgram.h"
+
 class Entity
 {
 private:
     bool m_is_active = true;
 
-    // ––––– ANIMATION ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ ANIMATION ï¿½ï¿½ï¿½ï¿½ï¿½ //
     int* m_animation_right = NULL, // move to the right
         * m_animation_left = NULL, // move to the left
         * m_animation_up = NULL, // move upwards
         * m_animation_down = NULL; // move downwards
 
-    // ––––– PHYSICS (GRAVITY) ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ PHYSICS (GRAVITY) ï¿½ï¿½ï¿½ï¿½ï¿½ //
     glm::vec3 m_position;
     glm::vec3 m_velocity;
     glm::vec3 m_acceleration;
 
-    // ————— TRANSFORMATIONS ————— //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ TRANSFORMATIONS ï¿½ï¿½ï¿½ï¿½ï¿½ //
     float     m_speed;
     glm::vec3 m_movement;
     glm::mat4 m_model_matrix;
@@ -25,14 +31,14 @@ private:
 
 
 public:
-    // ————— STATIC VARIABLES ————— //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ STATIC VARIABLES ï¿½ï¿½ï¿½ï¿½ï¿½ //
     static const int SECONDS_PER_FRAME = 4;
     static const int LEFT = 0,
         RIGHT = 1,
         UP = 2,
         DOWN = 3;
 
-    // ————— ANIMATION ————— //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ ANIMATION ï¿½ï¿½ï¿½ï¿½ï¿½ //
     int** m_walking = new int* [4]
         {
             m_animation_left,
@@ -49,11 +55,11 @@ public:
     int* m_animation_indices = NULL;
     float m_animation_time = 0.0f;
 
-    // ––––– PHYSICS (JUMPING) ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ PHYSICS (JUMPING) ï¿½ï¿½ï¿½ï¿½ï¿½ //
     bool  m_is_jumping = false;
     float m_jumping_power = 0;
 
-    // ––––– PHYSICS (COLLISIONS) ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ PHYSICS (COLLISIONS) ï¿½ï¿½ï¿½ï¿½ï¿½ //
     bool m_collided_top = false;
     bool m_collided_bottom = false;
     bool m_collided_left = false;
@@ -61,7 +67,7 @@ public:
 
     GLuint    m_texture_id;
 
-    // ————— METHODS ————— //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ METHODS ï¿½ï¿½ï¿½ï¿½ï¿½ //
     Entity();
     ~Entity();
 
@@ -81,7 +87,7 @@ public:
     void activate() { m_is_active = true; };
     void deactivate() { m_is_active = false; };
 
-    // ————— GETTERS ————— //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ GETTERS ï¿½ï¿½ï¿½ï¿½ï¿½ //
     glm::vec3 const get_position()     const { return m_position; };
     glm::vec3 const get_velocity()     const { return m_velocity; };
     glm::vec3 const get_acceleration() const { return m_acceleration; };
@@ -90,7 +96,7 @@ public:
     int       const get_width()        const { return m_width; };
     int       const get_height()       const { return m_height; };
 
-    // ————— SETTERS ————— //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ SETTERS ï¿½ï¿½ï¿½ï¿½ï¿½ //
     void const set_position(glm::vec3 new_position) { m_position = new_position; };
     void const set_velocity(glm::vec3 new_velocity) { m_velocity = new_velocity; };
     void const set_acceleration(glm::vec3 new_position) { m_acceleration = new_position; };

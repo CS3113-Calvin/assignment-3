@@ -6,21 +6,16 @@
 #endif
 
 #define GL_GLEXT_PROTOTYPES 1
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "ShaderProgram.h"
 #include "Entity.h"
 
 Entity::Entity()
 {
-    // ––––– PHYSICS ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ PHYSICS ï¿½ï¿½ï¿½ï¿½ï¿½ //
     m_position = glm::vec3(0.0f);
     m_velocity = glm::vec3(0.0f);
     m_acceleration = glm::vec3(0.0f);
 
-    // ––––– TRANSLATION ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ TRANSLATION ï¿½ï¿½ï¿½ï¿½ï¿½ //
     m_movement = glm::vec3(0.0f);
     m_speed = 0;
     m_model_matrix = glm::mat4(1.0f);
@@ -82,7 +77,7 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
     m_collided_left = false;
     m_collided_right = false;
 
-    // ––––– ANIMATION ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ ANIMATION ï¿½ï¿½ï¿½ï¿½ï¿½ //
     if (m_animation_indices != NULL)
     {
         if (glm::length(m_movement) != 0)
@@ -103,7 +98,7 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
         }
     }
 
-    // ––––– GRAVITY ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ GRAVITY ï¿½ï¿½ï¿½ï¿½ï¿½ //
     m_velocity.x = m_movement.x * m_speed;
     m_velocity += m_acceleration * delta_time;
 
@@ -113,7 +108,7 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
     m_position.x += m_velocity.x * delta_time;
     check_collision_x(collidable_entities, collidable_entity_count);
 
-    // ––––– JUMPING ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ JUMPING ï¿½ï¿½ï¿½ï¿½ï¿½ //
     if (m_is_jumping)
     {
         // STEP 1: Immediately return the flag to its original false state
@@ -123,7 +118,7 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
         m_velocity.y += m_jumping_power;
     }
 
-    // ––––– TRANSFORMATIONS ––––– //
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ TRANSFORMATIONS ï¿½ï¿½ï¿½ï¿½ï¿½ //
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
 }
