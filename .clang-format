@@ -4,3 +4,4 @@ ColumnLimit: 0
 AlignConsecutiveAssignments:
   Enabled: true
   AlignCompound: true
+AlignConsecutiveDeclarations: true

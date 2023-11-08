@@ -15,7 +15,7 @@
 #define NUMBER_OF_ENEMIES 3
 #define FIXED_TIMESTEP 0.0166666f
 #define ACC_OF_GRAVITY -9.81f
-#define PLATFORM_COUNT 3
+#define PLATFORM_COUNT 41
 
 #ifdef _WINDOWS
 #include <GL/glew.h>
@@ -42,6 +42,7 @@ struct GameState {
 
 // ����� CONSTANTS ����� //
 const float GRAVITY = -9.81f;
+const float MILLISECONDS_IN_SECOND = 1000.0;
 
 const int WINDOW_WIDTH  = 640,
           WINDOW_HEIGHT = 960;
@@ -59,9 +60,11 @@ const int VIEWPORT_X      = 0,
 const char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
            F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
-const float MILLISECONDS_IN_SECOND = 1000.0;
 const char SPRITESHEET_FILEPATH[]  = "assets/george_0.png",
-           PLATFORM_FILEPATH[]     = "assets/platformPack_tile027.png";
+           PLATFORM_FILEPATH[]     = "assets/platformPack_tile027.png",
+           PLAYER_FILEPATH[]       = "assets/soph.png",
+        //    PLAYER_FILEPATH[]       = "assets/player.png",
+           PEG_FILEPATH[]          = "assets/peg.png";
 
 const int NUMBER_OF_TEXTURES = 1;  // to be generated, that is
 const GLint LEVEL_OF_DETAIL  = 0;  // base image level; Level n is the nth mipmap reduction image
@@ -140,6 +143,7 @@ void initialise() {
     g_game_state.player->set_movement(glm::vec3(0.0f));
     g_game_state.player->set_acceleration(glm::vec3(0.0f, ACC_OF_GRAVITY * 0.1, 0.0f));
     g_game_state.player->set_speed(1.0f);
+    // g_game_state.player->m_texture_id = load_texture(PLAYER_FILEPATH);
     g_game_state.player->m_texture_id = load_texture(SPRITESHEET_FILEPATH);
 
     // Walking
@@ -155,19 +159,44 @@ void initialise() {
     g_game_state.player->m_animation_cols    = 4;
     g_game_state.player->m_animation_rows    = 4;
     g_game_state.player->set_height(0.9f);
-    g_game_state.player->set_width(0.9f);
+    g_game_state.player->set_width(0.3f);
+    g_game_state.player->set_scale(glm::vec3(0.9f, 0.9f, 0.9f));
 
     // Jumping
-    g_game_state.player->m_jumping_power = 3.0f;
+    g_game_state.player->m_jumping_power = 2.0f;
 
     // ����� PLATFORM ����� //
+    const int height = 9;
+    int width = 5;
     g_game_state.platforms = new Entity[PLATFORM_COUNT];
+    int index = 0;
 
-    for (int i = 0; i < PLATFORM_COUNT; i++) {
-        g_game_state.platforms[i].m_texture_id = load_texture(PLATFORM_FILEPATH);
-        g_game_state.platforms[i].set_position(glm::vec3(i - 1.0f, -3.0f, 0.0f));
-        g_game_state.platforms[i].update(0.0f, NULL, 0);
+    for (int i = 0; i < height; ++i) {
+        // 4 pegs per row if odd, 5 if even
+        width = (i % 2 == 0) ? 5 : 4;
+        for (int j = 0; j < width; ++j) {
+            g_game_state.platforms[index].m_texture_id = load_texture(PEG_FILEPATH);
+            if (i % 2 == 0) {
+                g_game_state.platforms[index].set_position(glm::vec3(1 + 2*j - 2*2.5f, -i*1.3 + 4.0f, 0.0f));
+            } else {
+                g_game_state.platforms[index].set_position(glm::vec3(1 + 2*j - 2*2.0f, -i*1.3 + 4.0f, 0.0f));
+            }
+            // g_game_state.platforms[index].set_position(glm::vec3(j - 2.0f, -i + 1.0f, 0.0f));
+            g_game_state.platforms[index].set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
+            // set width and height
+            g_game_state.platforms[index].set_width(0.002f);
+            g_game_state.platforms[index].set_height(0.02f);
+
+            g_game_state.platforms[index].update(0.0f, NULL, 0);
+            ++index;
+        }
     }
+
+    // for (int i = 0; i < 3; i++) {
+    //     g_game_state.platforms[i].m_texture_id = load_texture(PLATFORM_FILEPATH);
+    //     g_game_state.platforms[i].set_position(glm::vec3(i - 1.0f, -3.0f, 0.0f));
+    //     g_game_state.platforms[i].update(0.0f, NULL, 0);
+    // }
 
     // ����� GENERAL ����� //
     glEnable(GL_BLEND);
