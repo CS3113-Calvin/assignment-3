@@ -51,9 +51,6 @@ class Entity {
 
     GLuint m_texture_id;
 
-    float min_acceleration = -5.0f;
-    float max_acceleration = 5.0f;
-
     bool m_mission_failed = false;
     bool m_mission_accomplished = false;
 
@@ -66,8 +63,6 @@ class Entity {
 
     void update(float delta_time, Entity* collidable_entities, int collidable_entity_count, Entity* win_flag);
     void render(ShaderProgram* program);
-
-    void move(int direction);
 
     void move_left() { m_acceleration.x = glm::clamp(m_acceleration.x - 0.5f, -5.0f, 5.0f); };
     void move_right() { m_acceleration.x = glm::clamp(m_acceleration.x + 0.5f, -5.0f, 5.0f); };

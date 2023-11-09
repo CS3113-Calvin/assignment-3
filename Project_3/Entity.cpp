@@ -22,25 +22,6 @@ Entity::Entity() {
 
 Entity::~Entity() {}
 
-void Entity::move(int direction) {
-    switch (direction) {
-        case LEFT:
-            m_acceleration.x += -1;
-            break;
-        case RIGHT:
-            m_acceleration.x += 1;
-            break;
-        case UP:
-            m_acceleration.y += 1;
-            break;
-        case DOWN:
-            m_acceleration.y += -1;
-            break;
-    }
-    // clamp acceleration by min and max values
-    m_acceleration = glm::clamp(m_acceleration, glm::vec3(min_acceleration, min_acceleration, 0.0f), glm::vec3(max_acceleration, max_acceleration, 0.0f));
-}
-
 bool in_bounds(float value, float min, float max) {
     return value >= min && value <= max;
 }
