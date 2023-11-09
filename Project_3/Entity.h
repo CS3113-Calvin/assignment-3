@@ -54,14 +54,15 @@ class Entity {
     float min_acceleration = -5.0f;
     float max_acceleration = 5.0f;
 
+    bool m_mission_failed = false;
+    bool m_mission_accomplished = false;
+
     // ����� METHODS ����� //
     Entity();
     ~Entity();
 
     // void       draw_sprite_from_texture_atlas(ShaderProgram* program, GLuint texture_id, int index);
     bool const check_collision(Entity* other) const;
-    void const check_collision_y(Entity* collidable_entities, int collidable_entity_count);
-    void const check_collision_x(Entity* collidable_entities, int collidable_entity_count);
 
     void update(float delta_time, Entity* collidable_entities, int collidable_entity_count, Entity* win_flag);
     void render(ShaderProgram* program);

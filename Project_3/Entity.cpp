@@ -54,56 +54,13 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
     m_collided_right  = false;
 
     // ����� GRAVITY ����� //
-    // m_velocity.x  = m_movement.x * m_speed;
     const float GRAVITY  = 2.0f;
     m_velocity          += m_acceleration * delta_time;
     m_velocity.y        -= GRAVITY * delta_time;
 
-    m_position.y += m_velocity.y * delta_time;
-    check_collision_y(collidable_entities, collidable_entity_count);
-
-    m_position.x += m_velocity.x * delta_time;
-    check_collision_x(collidable_entities, collidable_entity_count);
-
-    // Slow acceleration over time
-    if (m_acceleration.y > 0.001f) {
-        m_acceleration.y *= 0.8;
-    }
-    if (m_acceleration.x > 0.001f) {
-        m_acceleration.x *= 0.8;
-    }
-    m_acceleration  = glm::clamp(m_acceleration, glm::vec3(-5.0f, -5.0f, 0.0f), glm::vec3(5.0f, 5.0f, 0.0f));
-    // std::cout << "acceleration" << m_acceleration.x << std::endl;
-    // std::cout << "velocity" << m_velocity.x << std::endl;
-    // std::cout << "position" << m_position.x << std::endl;
-
-    // ����� TRANSFORMATIONS ����� //
-    m_model_matrix = glm::mat4(1.0f);
-    m_model_matrix = glm::translate(m_model_matrix, m_position);
-    m_model_matrix = glm::scale(m_model_matrix, m_scale);
-    m_model_matrix = glm::rotate(m_model_matrix, glm::radians(m_rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    // Update if in bounds
-    if (in_bounds(m_position.x, -view_width, view_width) && in_bounds(m_position.y, -view_height, view_height)) {
-        m_is_active = true;
-    } else {
-        std::cout << "NOT IN BOUNDS" << m_position.x << std::endl;
-        m_is_active = false;
-    }
-
-    // Check if player has won
-    if (win_flag && check_collision(win_flag)) {
-        win_flag->m_is_active = false;
-        // player_won            = true;
-        m_is_active           = false;
-    }
-}
-
-void const Entity::check_collision_y(Entity* collidable_entities, int collidable_entity_count) {
     for (int i = 0; i < collidable_entity_count; i++) {
         // STEP 1: For every entity that our player can collide with...
         Entity* collidable_entity = &collidable_entities[i];
-
         if (check_collision(collidable_entity)) {
             // STEP 2: Calculate the distance between its centre and our centre
             //         and use that to calculate the amount of overlap between
@@ -122,32 +79,45 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                 m_velocity.y       = 0;
                 m_collided_bottom  = true;
             }
-
-            // Add random acceleration to the player away from the direction of collision
-            m_acceleration.y *= -1;
-            // m_acceleration.x *= (rand() % 2 == 0) ? -1 : 1;
-            // m_acceleration.y *= (rand() % 2 == 0) ? -1 : 1;
+            m_is_active = false;
+            m_mission_failed  = true;
+            return;
         }
     }
-}
 
-void const Entity::check_collision_x(Entity* collidable_entities, int collidable_entity_count) {
-    for (int i = 0; i < collidable_entity_count; i++) {
-        Entity* collidable_entity = &collidable_entities[i];
+    m_position.y += m_velocity.y * delta_time;
+    m_position.x += m_velocity.x * delta_time;
 
-        if (check_collision(collidable_entity)) {
-            float x_distance = fabs(m_position.x - collidable_entity->m_position.x);
-            float x_overlap  = fabs(x_distance - (m_width / 2.0f) - (collidable_entity->m_width / 2.0f));
-            if (m_velocity.x > 0) {
-                m_position.x     -= x_overlap;
-                m_velocity.x      = 0;
-                m_collided_right  = true;
-            } else if (m_velocity.x < 0) {
-                m_position.x    += x_overlap;
-                m_velocity.x     = 0;
-                m_collided_left  = true;
-            }
-        }
+    // Slow acceleration over time
+    if (m_acceleration.y > 0.001f) {
+        m_acceleration.y *= 0.8;
+    }
+    if (m_acceleration.x > 0.001f) {
+        m_acceleration.x *= 0.8;
+    }
+    m_acceleration = glm::clamp(m_acceleration, glm::vec3(-5.0f, -5.0f, 0.0f), glm::vec3(5.0f, 5.0f, 0.0f));
+    // std::cout << "acceleration" << m_acceleration.x << std::endl;
+    // std::cout << "velocity" << m_velocity.x << std::endl;
+    // std::cout << "position" << m_position.x << std::endl;
+
+    // ����� TRANSFORMATIONS ����� //
+    m_model_matrix = glm::mat4(1.0f);
+    m_model_matrix = glm::translate(m_model_matrix, m_position);
+    m_model_matrix = glm::scale(m_model_matrix, m_scale);
+    m_model_matrix = glm::rotate(m_model_matrix, glm::radians(m_rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Check if player has won
+    if (win_flag && check_collision(win_flag)) {
+        win_flag->m_is_active = false;
+        m_is_active           = false;
+        m_mission_accomplished  = true;
+    }
+
+    // Check if player is still within bounds
+    if (!in_bounds(m_position.x, -view_width, view_width) || !in_bounds(m_position.y, -view_height, view_height)) {
+        std::cout << "NOT IN BOUNDS" << m_position.x << std::endl;
+        m_is_active = false;
+        m_mission_failed  = true;
     }
 }
 

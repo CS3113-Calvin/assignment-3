@@ -39,10 +39,12 @@ struct GameState {
     Entity* player;
     Entity* asteroids;
     Entity* flag;
+    Entity* mission_failed;
+    Entity* mission_accomplished;
+    Entity* background;
 };
 
 // ����� CONSTANTS ����� //
-const float GRAVITY                = -9.81f;
 const float MILLISECONDS_IN_SECOND = 1000.0;
 
 const int WINDOW_WIDTH  = 640 * 3,
@@ -61,13 +63,11 @@ const int VIEWPORT_X      = 0,
 const char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
            F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
-const char PLATFORM_FILEPATH[] = "assets/platformPack_tile027.png",
-           PLAYER_FILEPATH[]   = "assets/ship_1.png",
-           PEG_FILEPATH[]      = "assets/peg.png",
-           WIN_FILEPATH[]      = "assets/win.png",
-           ASTEROID_FILEPATH[] = "assets/asteroid.png";
-//    PLAYER_FILEPATH[]       = "assets/player.png",
-// SPRITESHEET_FILEPATH[]  = "assets/george_0.png",
+const char PLAYER_FILEPATH[]               = "assets/ship_1.png",
+           WIN_FILEPATH[]                  = "assets/win.png",
+           ASTEROID_FILEPATH[]             = "assets/asteroid.png",
+           MISSION_ACCOMPLISHED_FILEPATH[] = "assets/mission_accomplished.png",
+           MISSION_FAILED_FILEPATH[]       = "assets/mission_failed.png";
 
 const int   NUMBER_OF_TEXTURES = 1;  // to be generated, that is
 const GLint LEVEL_OF_DETAIL    = 0;  // base image level; Level n is the nth mipmap reduction image
@@ -86,7 +86,7 @@ float g_previous_ticks   = 0.0f;
 float g_time_accumulator = 0.0f;
 
 // ���� GENERAL FUNCTIONS ���� //
-float rand_FloatRange(float a, float b) {
+float rand_float_range(float a, float b) {
     return ((b - a) * ((float)rand() / RAND_MAX)) + a;
 }
 
@@ -116,6 +116,8 @@ GLuint load_texture(const char* filepath) {
 }
 
 void initialise() {
+    srand(time(NULL));  // seed random time
+
     SDL_Init(SDL_INIT_VIDEO);
     g_display_window = SDL_CreateWindow("Hello, Entities!",
                                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -146,42 +148,55 @@ void initialise() {
     // ����� PLAYER ����� //
     // Existing
     g_game_state.player = new Entity();
-    g_game_state.player->set_position(glm::vec3(0.0f, view_height - 2.0f, 0.0f));
+    g_game_state.player->set_position(glm::vec3(rand_float_range(-view_width+2, view_width-2), view_height, 0.0f));
     g_game_state.player->set_movement(glm::vec3(0.0f));
-    // g_game_state.player->set_acceleration(glm::vec3(0.0f, ACC_OF_GRAVITY * 0.1, 0.0f));
     g_game_state.player->set_acceleration(glm::vec3(0.0f, 0.0f, 0.0f));
     g_game_state.player->m_texture_id = load_texture(PLAYER_FILEPATH);
-    g_game_state.player->set_height(0.9f);
-    g_game_state.player->set_width(0.3f);
-    g_game_state.player->set_scale(glm::vec3(0.9f, 0.9f, 1.0f));
+    g_game_state.player->set_height(0.5f);
+    g_game_state.player->set_width(0.5f);
+    g_game_state.player->set_scale(glm::vec3(1.0f, 1.0f, 1.0f));
 
     // ����� ASTEROIDS ����� //
     g_game_state.asteroids = new Entity[ASTEROID_COUNT];
-    int index              = 0;
 
     // Set asteroids at random locations on the screen
-    for (int i = 0; i < ASTEROID_COUNT; ++i) {
+    for (int index = 0; index < ASTEROID_COUNT; ++index) {
         g_game_state.asteroids[index].m_texture_id = load_texture(ASTEROID_FILEPATH);
 
         // random asteroid location between view_width and view_height
-        g_game_state.asteroids[index].set_position(glm::vec3(rand_FloatRange(-view_width, view_width), rand_FloatRange(-view_height, view_height-3.0f), 0.0f));
+        g_game_state.asteroids[index].set_position(glm::vec3(rand_float_range(-view_width, view_width), rand_float_range(-view_height, view_height - 3.0f), 0.0f));
 
         g_game_state.asteroids[index].set_scale(glm::vec3(1.5f, 1.5f, 1.0f));
-        g_game_state.asteroids[index].set_width(1.0f);
+        g_game_state.asteroids[index].set_width(0.75f);
         g_game_state.asteroids[index].set_height(1.0f);
         g_game_state.asteroids[index].update(0.0f, NULL, 0, NULL);
-        ++index;
     }
 
     // Set up the win flag at the bottom of the screen at a random position
     g_game_state.flag               = new Entity();
     g_game_state.flag->m_texture_id = load_texture(WIN_FILEPATH);
-    g_game_state.flag->set_position(glm::vec3(rand() % 10 - 5.0f, -5.0f, 0.0f));
-    g_game_state.flag->set_scale(glm::vec3(1.5f, 1.5f, 1.0f));
-    g_game_state.flag->set_width(1.0f);
-    g_game_state.flag->set_height(1.0f);
+    g_game_state.flag->set_position(glm::vec3(rand() % 10 - 5.0f, -6.0f, 0.0f));
+    g_game_state.flag->set_scale(glm::vec3(2.0f, 2.0f, 1.0f));
+    g_game_state.flag->set_width(1.5f);
+    g_game_state.flag->set_height(1.5f);
     g_game_state.flag->update(0.0f, NULL, 0, NULL);
 
+    // Game states
+    g_game_state.mission_failed               = new Entity();
+    g_game_state.mission_failed->m_texture_id = load_texture(MISSION_FAILED_FILEPATH);
+    g_game_state.mission_failed->set_scale(glm::vec3(20.0f, 10.0f, 1.0f));
+    g_game_state.mission_failed->update(0.0f, NULL, 0, NULL);
+
+    g_game_state.mission_accomplished               = new Entity();
+    g_game_state.mission_accomplished->m_texture_id = load_texture(MISSION_ACCOMPLISHED_FILEPATH);
+    g_game_state.mission_accomplished->set_scale(glm::vec3(20.0f, 10.0f, 1.0f));
+    g_game_state.mission_accomplished->update(0.0f, NULL, 0, NULL);
+
+    // Background
+    g_game_state.background               = new Entity();
+    g_game_state.background->m_texture_id = load_texture("assets/background.png");
+    g_game_state.background->set_scale(glm::vec3(30.0f, 30.0f, 1.0f));
+    g_game_state.background->update(0.0f, NULL, 0, NULL);
 
     // ����� GENERAL ����� //
     glEnable(GL_BLEND);
@@ -268,6 +283,9 @@ void render() {
     // ����� GENERAL ����� //
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // ����� BACKGROUND ����� //
+    g_game_state.background->render(&g_shader_program);
+
     // ����� PLAYER ����� //
     g_game_state.player->render(&g_shader_program);
 
@@ -276,6 +294,16 @@ void render() {
 
     // ����� WIN FLAG ����� //
     g_game_state.flag->render(&g_shader_program);
+
+    // ����� MISSION ACCOMPLISHED ����� //
+    if (g_game_state.player->m_mission_accomplished) {
+        g_game_state.mission_accomplished->render(&g_shader_program);
+    }
+
+    // ����� MISSION FAILED ����� //
+    if (g_game_state.player->m_mission_failed) {
+        g_game_state.mission_failed->render(&g_shader_program);
+    }
 
     // ����� GENERAL ����� //
     SDL_GL_SwapWindow(g_display_window);

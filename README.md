@@ -1,4 +1,14 @@
-# Plinko board
+# Project 3
+
+Game description:
+
+* Move your space ship using the arrow keys
+* Avoid touching the asteroids or moving out of bounds
+* Reach the end goal to win
+
+Attributions:
+* [Space assets](https://axassets.itch.io/spaceship-simple-assets)
+* [Mission failed/accomplished text](https://www.coolgenerator.com/text-image-generator)
 
 ## [Original Description](https://github.com/sebastianromerocruz/CS3113-material/blob/3bdc3bf8883bef8ca462431e4b1d79ee9b548a5c/assignments/project_3.md)
 
