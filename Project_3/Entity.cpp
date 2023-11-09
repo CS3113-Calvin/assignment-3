@@ -29,11 +29,6 @@ bool in_bounds(float value, float min, float max) {
 void Entity::update(float delta_time, Entity* collidable_entities, int collidable_entity_count, Entity* win_flag) {
     if (!m_is_active) return;
 
-    m_collided_top    = false;
-    m_collided_bottom = false;
-    m_collided_left   = false;
-    m_collided_right  = false;
-
     // ����� GRAVITY ����� //
     const float GRAVITY  = 2.0f;
     m_velocity          += m_acceleration * delta_time;
@@ -43,25 +38,8 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
         // STEP 1: For every entity that our player can collide with...
         Entity* collidable_entity = &collidable_entities[i];
         if (check_collision(collidable_entity)) {
-            // STEP 2: Calculate the distance between its centre and our centre
-            //         and use that to calculate the amount of overlap between
-            //         both bodies.
-            float y_distance = fabs(m_position.y - collidable_entity->m_position.y);
-            float y_overlap  = fabs(y_distance - (m_height / 2.0f) - (collidable_entity->m_height / 2.0f));
-
-            // STEP 3: "Unclip" ourselves from the other entity, and zero our
-            //         vertical velocity.
-            if (m_velocity.y > 0) {
-                m_position.y   -= y_overlap;
-                m_velocity.y    = 0;
-                m_collided_top  = true;
-            } else if (m_velocity.y < 0) {
-                m_position.y      += y_overlap;
-                m_velocity.y       = 0;
-                m_collided_bottom  = true;
-            }
-            m_is_active = false;
-            m_mission_failed  = true;
+            m_is_active      = false;
+            m_mission_failed = true;
             return;
         }
     }
@@ -77,9 +55,10 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
         m_acceleration.x *= 0.8;
     }
     m_acceleration = glm::clamp(m_acceleration, glm::vec3(-5.0f, -5.0f, 0.0f), glm::vec3(5.0f, 5.0f, 0.0f));
-    // std::cout << "acceleration" << m_acceleration.x << std::endl;
-    // std::cout << "velocity" << m_velocity.x << std::endl;
-    // std::cout << "position" << m_position.x << std::endl;
+    // std::cout << "acceleration: " << m_acceleration.x << std::endl;
+    // std::cout << "velocity: " << m_velocity.x << std::endl;
+    // std::cout << "position: " << m_position.x << std::endl;
+    std::cout << "fuel: " << m_fuel << std::endl;
 
     // ����� TRANSFORMATIONS ����� //
     m_model_matrix = glm::mat4(1.0f);
@@ -89,16 +68,16 @@ void Entity::update(float delta_time, Entity* collidable_entities, int collidabl
 
     // Check if player has won
     if (win_flag && check_collision(win_flag)) {
-        win_flag->m_is_active = false;
-        m_is_active           = false;
-        m_mission_accomplished  = true;
+        win_flag->m_is_active  = false;
+        m_is_active            = false;
+        m_mission_accomplished = true;
     }
 
     // Check if player is still within bounds
     if (!in_bounds(m_position.x, -view_width, view_width) || !in_bounds(m_position.y, -view_height, view_height)) {
         std::cout << "NOT IN BOUNDS" << m_position.x << std::endl;
-        m_is_active = false;
-        m_mission_failed  = true;
+        m_is_active      = false;
+        m_mission_failed = true;
     }
 }
 

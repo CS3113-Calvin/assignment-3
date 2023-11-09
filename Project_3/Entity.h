@@ -43,16 +43,13 @@ class Entity {
                      UP                = 2,
                      DOWN              = 3;
 
-    // ����� PHYSICS (COLLISIONS) ����� //
-    bool m_collided_top    = false;
-    bool m_collided_bottom = false;
-    bool m_collided_left   = false;
-    bool m_collided_right  = false;
-
     GLuint m_texture_id;
 
-    bool m_mission_failed = false;
-    bool m_mission_accomplished = false;
+    bool   m_mission_failed       = false;
+    bool   m_mission_accomplished = false;
+    float  m_fuel                 = 500.0f;
+    GLuint m_low_fuel_texture_id;
+    GLuint m_no_fuel_texture_id;
 
     // ����� METHODS ����� //
     Entity();
@@ -64,10 +61,54 @@ class Entity {
     void update(float delta_time, Entity* collidable_entities, int collidable_entity_count, Entity* win_flag);
     void render(ShaderProgram* program);
 
-    void move_left() { m_acceleration.x = glm::clamp(m_acceleration.x - 0.5f, -5.0f, 5.0f); };
-    void move_right() { m_acceleration.x = glm::clamp(m_acceleration.x + 0.5f, -5.0f, 5.0f); };
-    void move_up() { m_acceleration.y = glm::clamp(m_acceleration.y + 1.0f, -5.0f, 5.0f); };
-    void move_down() { m_acceleration.y = glm::clamp(m_acceleration.y - 1.0f, -5.0f, 5.0f); };
+    void move_left() {
+        if (m_fuel > 0.0f) {
+            m_acceleration.x  = glm::clamp(m_acceleration.x - 0.5f, -5.0f, 5.0f);
+            m_fuel           -= 1;
+        }
+        if (m_fuel <= 250.0f) {
+            m_texture_id = m_low_fuel_texture_id;
+        }
+        if (m_fuel <= 0.0f) {
+            m_texture_id = m_no_fuel_texture_id;
+        }
+    };
+    void move_right() {
+        if (m_fuel > 0.0f) {
+            m_acceleration.x  = glm::clamp(m_acceleration.x + 0.5f, -5.0f, 5.0f);
+            m_fuel           -= 1;
+        }
+        if (m_fuel <= 250.0f) {
+            m_texture_id = m_low_fuel_texture_id;
+        }
+        if (m_fuel <= 0.0f) {
+            m_texture_id = m_no_fuel_texture_id;
+        }
+    };
+    void move_up() {
+        if (m_fuel > 0.0f) {
+            m_acceleration.y  = glm::clamp(m_acceleration.y + 1.0f, -5.0f, 5.0f);
+            m_fuel           -= 1;
+        }
+        if (m_fuel <= 250.0f) {
+            m_texture_id = m_low_fuel_texture_id;
+        }
+        if (m_fuel <= 0.0f) {
+            m_texture_id = m_no_fuel_texture_id;
+        }
+    };
+    void move_down() {
+        if (m_fuel > 0.0f) {
+            m_acceleration.y  = glm::clamp(m_acceleration.y - 1.0f, -5.0f, 5.0f);
+            m_fuel           -= 1;
+        }
+        if (m_fuel <= 250.0f) {
+            m_texture_id = m_low_fuel_texture_id;
+        }
+        if (m_fuel <= 0.0f) {
+            m_texture_id = m_no_fuel_texture_id;
+        }
+    };
 
     void activate() { m_is_active = true; };
     void deactivate() { m_is_active = false; };

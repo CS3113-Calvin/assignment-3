@@ -67,7 +67,9 @@ const char PLAYER_FILEPATH[]               = "assets/ship_1.png",
            WIN_FILEPATH[]                  = "assets/win.png",
            ASTEROID_FILEPATH[]             = "assets/asteroid.png",
            MISSION_ACCOMPLISHED_FILEPATH[] = "assets/mission_accomplished.png",
-           MISSION_FAILED_FILEPATH[]       = "assets/mission_failed.png";
+           MISSION_FAILED_FILEPATH[]       = "assets/mission_failed.png",
+           PLAYER_LOW_FUEL_FILEPATH[]      = "assets/ship_1_low_fuel.png",
+           PLAYER_NO_FUEL_FILEPATH[]       = "assets/ship_1_no_fuel.png";
 
 const int   NUMBER_OF_TEXTURES = 1;  // to be generated, that is
 const GLint LEVEL_OF_DETAIL    = 0;  // base image level; Level n is the nth mipmap reduction image
@@ -148,13 +150,15 @@ void initialise() {
     // ����� PLAYER ����� //
     // Existing
     g_game_state.player = new Entity();
-    g_game_state.player->set_position(glm::vec3(rand_float_range(-view_width+2, view_width-2), view_height, 0.0f));
+    g_game_state.player->set_position(glm::vec3(rand_float_range(-view_width + 2, view_width - 2), view_height, 0.0f));
     g_game_state.player->set_movement(glm::vec3(0.0f));
     g_game_state.player->set_acceleration(glm::vec3(0.0f, 0.0f, 0.0f));
     g_game_state.player->m_texture_id = load_texture(PLAYER_FILEPATH);
     g_game_state.player->set_height(0.5f);
     g_game_state.player->set_width(0.5f);
     g_game_state.player->set_scale(glm::vec3(1.0f, 1.0f, 1.0f));
+    g_game_state.player->m_low_fuel_texture_id = load_texture(PLAYER_LOW_FUEL_FILEPATH);
+    g_game_state.player->m_no_fuel_texture_id = load_texture(PLAYER_NO_FUEL_FILEPATH);
 
     // ����� ASTEROIDS ����� //
     g_game_state.asteroids = new Entity[ASTEROID_COUNT];
