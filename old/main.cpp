@@ -15,7 +15,7 @@
 #define NUMBER_OF_ENEMIES 3
 #define FIXED_TIMESTEP 0.0166666f
 #define ACC_OF_GRAVITY -9.81f
-#define ASTEROID_COUNT 60
+#define PLATFORM_COUNT 32
 
 #ifdef _WINDOWS
 #include <GL/glew.h>
@@ -37,15 +37,14 @@
 // ����� STRUCTS AND ENUMS �����//
 struct GameState {
     Entity* player;
-    Entity* asteroids;
-    Entity* flag;
+    Entity* platforms;
 };
 
 // ����� CONSTANTS ����� //
-const float GRAVITY                = -9.81f;
+const float GRAVITY = -9.81f;
 const float MILLISECONDS_IN_SECOND = 1000.0;
 
-const int WINDOW_WIDTH  = 640 * 3,
+const int WINDOW_WIDTH  = 640,
           WINDOW_HEIGHT = 960;
 
 const float BG_RED     = 0.1922f,
@@ -61,37 +60,31 @@ const int VIEWPORT_X      = 0,
 const char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
            F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
-const char PLATFORM_FILEPATH[] = "assets/platformPack_tile027.png",
-           PLAYER_FILEPATH[]   = "assets/ship_1.png",
-           PEG_FILEPATH[]      = "assets/peg.png",
-           WIN_FILEPATH[]      = "assets/win.png",
-           ASTEROID_FILEPATH[] = "assets/asteroid.png";
-//    PLAYER_FILEPATH[]       = "assets/player.png",
-// SPRITESHEET_FILEPATH[]  = "assets/george_0.png",
+const char SPRITESHEET_FILEPATH[]  = "assets/george_0.png",
+           PLATFORM_FILEPATH[]     = "assets/platformPack_tile027.png",
+           PLAYER_FILEPATH[]       = "assets/soph.png",
+        //    PLAYER_FILEPATH[]       = "assets/player.png",
+           PEG_FILEPATH[]          = "assets/peg.png";
 
-const int   NUMBER_OF_TEXTURES = 1;  // to be generated, that is
-const GLint LEVEL_OF_DETAIL    = 0;  // base image level; Level n is the nth mipmap reduction image
-const GLint TEXTURE_BORDER     = 0;  // this value MUST be zero
+const int NUMBER_OF_TEXTURES = 1;  // to be generated, that is
+const GLint LEVEL_OF_DETAIL  = 0;  // base image level; Level n is the nth mipmap reduction image
+const GLint TEXTURE_BORDER   = 0;  // this value MUST be zero
 
 // ����� VARIABLES ����� //
 GameState g_game_state;
 
 SDL_Window* g_display_window;
-bool        g_game_is_running = true;
+bool g_game_is_running = true;
 
 ShaderProgram g_shader_program;
-glm::mat4     g_view_matrix, g_projection_matrix;
+glm::mat4 g_view_matrix, g_projection_matrix;
 
 float g_previous_ticks   = 0.0f;
 float g_time_accumulator = 0.0f;
 
 // ���� GENERAL FUNCTIONS ���� //
-float rand_FloatRange(float a, float b) {
-    return ((b - a) * ((float)rand() / RAND_MAX)) + a;
-}
-
 GLuint load_texture(const char* filepath) {
-    int            width, height, number_of_components;
+    int width, height, number_of_components;
     unsigned char* image = stbi_load(filepath, &width, &height, &number_of_components, STBI_rgb_alpha);
 
     if (image == NULL) {
@@ -134,7 +127,7 @@ void initialise() {
     g_shader_program.load(V_SHADER_PATH, F_SHADER_PATH);
 
     g_view_matrix       = glm::mat4(1.0f);
-    g_projection_matrix = glm::ortho(-view_width, view_width, -view_height, view_height, -1.0f, 1.0f);
+    g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f * 2, 3.75f * 2, -1.0f, 1.0f);
 
     g_shader_program.set_projection_matrix(g_projection_matrix);
     g_shader_program.set_view_matrix(g_view_matrix);
@@ -146,42 +139,66 @@ void initialise() {
     // ����� PLAYER ����� //
     // Existing
     g_game_state.player = new Entity();
-    g_game_state.player->set_position(glm::vec3(0.0f, view_height - 2.0f, 0.0f));
+    g_game_state.player->set_position(glm::vec3(0.0f));
     g_game_state.player->set_movement(glm::vec3(0.0f));
     // g_game_state.player->set_acceleration(glm::vec3(0.0f, ACC_OF_GRAVITY * 0.1, 0.0f));
     g_game_state.player->set_acceleration(glm::vec3(0.0f, 0.0f, 0.0f));
-    g_game_state.player->m_texture_id = load_texture(PLAYER_FILEPATH);
+    // g_game_state.player->set_speed(1.0f);
+    // g_game_state.player->m_texture_id = load_texture(PLAYER_FILEPATH);
+    g_game_state.player->m_texture_id = load_texture(SPRITESHEET_FILEPATH);
+
+    // Walking
+    g_game_state.player->m_walking[g_game_state.player->LEFT]  = new int[4]{1, 5, 9, 13};
+    g_game_state.player->m_walking[g_game_state.player->RIGHT] = new int[4]{3, 7, 11, 15};
+    g_game_state.player->m_walking[g_game_state.player->UP]    = new int[4]{2, 6, 10, 14};
+    g_game_state.player->m_walking[g_game_state.player->DOWN]  = new int[4]{0, 4, 8, 12};
+
+    g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->RIGHT];  // start George looking right
+    g_game_state.player->m_animation_frames  = 4;
+    g_game_state.player->m_animation_index   = 0;
+    g_game_state.player->m_animation_time    = 0.0f;
+    g_game_state.player->m_animation_cols    = 4;
+    g_game_state.player->m_animation_rows    = 4;
     g_game_state.player->set_height(0.9f);
     g_game_state.player->set_width(0.3f);
     g_game_state.player->set_scale(glm::vec3(0.9f, 0.9f, 1.0f));
+    g_game_state.player->set_acceleration(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    // ����� ASTEROIDS ����� //
-    g_game_state.asteroids = new Entity[ASTEROID_COUNT];
-    int index              = 0;
+    // Jumping
+    g_game_state.player->m_jumping_power = 2.0f;
 
-    // Set asteroids at random locations on the screen
-    for (int i = 0; i < ASTEROID_COUNT; ++i) {
-        g_game_state.asteroids[index].m_texture_id = load_texture(ASTEROID_FILEPATH);
+    // ����� PLATFORM ����� //
+    const int height = 7;
+    int width = 5;
+    g_game_state.platforms = new Entity[PLATFORM_COUNT];
+    int index = 0;
 
-        // random asteroid location between view_width and view_height
-        g_game_state.asteroids[index].set_position(glm::vec3(rand_FloatRange(-view_width, view_width), rand_FloatRange(-view_height, view_height-3.0f), 0.0f));
+    for (int i = 0; i < height; ++i) {
+        // 4 pegs per row if odd, 5 if even
+        width = (i % 2 == 0) ? 5 : 4;
+        for (int j = 0; j < width; ++j) {
+            g_game_state.platforms[index].m_texture_id = load_texture(PEG_FILEPATH);
+            if (i % 2 == 0) {
+                g_game_state.platforms[index].set_position(glm::vec3(1 + 2*j - 2*2.5f, -i*1.3 + 3.0f, 0.0f));
+            } else {
+                g_game_state.platforms[index].set_position(glm::vec3(1 + 2*j - 2*2.0f, -i*1.3 + 3.0f, 0.0f));
+            }
+            // g_game_state.platforms[index].set_position(glm::vec3(j - 2.0f, -i + 1.0f, 0.0f));
+            g_game_state.platforms[index].set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
+            // set width and height
+            g_game_state.platforms[index].set_width(0.05f);
+            g_game_state.platforms[index].set_height(0.05f);
 
-        g_game_state.asteroids[index].set_scale(glm::vec3(1.5f, 1.5f, 1.0f));
-        g_game_state.asteroids[index].set_width(1.0f);
-        g_game_state.asteroids[index].set_height(1.0f);
-        g_game_state.asteroids[index].update(0.0f, NULL, 0, NULL);
-        ++index;
+            g_game_state.platforms[index].update(0.0f, NULL, 0);
+            ++index;
+        }
     }
 
-    // Set up the win flag at the bottom of the screen at a random position
-    g_game_state.flag               = new Entity();
-    g_game_state.flag->m_texture_id = load_texture(WIN_FILEPATH);
-    g_game_state.flag->set_position(glm::vec3(rand() % 10 - 5.0f, -5.0f, 0.0f));
-    g_game_state.flag->set_scale(glm::vec3(1.5f, 1.5f, 1.0f));
-    g_game_state.flag->set_width(1.0f);
-    g_game_state.flag->set_height(1.0f);
-    g_game_state.flag->update(0.0f, NULL, 0, NULL);
-
+    // for (int i = 0; i < 3; i++) {
+    //     g_game_state.platforms[i].m_texture_id = load_texture(PLATFORM_FILEPATH);
+    //     g_game_state.platforms[i].set_position(glm::vec3(i - 1.0f, -3.0f, 0.0f));
+    //     g_game_state.platforms[i].update(0.0f, NULL, 0);
+    // }
 
     // ����� GENERAL ����� //
     glEnable(GL_BLEND);
@@ -190,7 +207,7 @@ void initialise() {
 
 void process_input() {
     // VERY IMPORTANT: If nothing is pressed, we don't want to go anywhere
-    // g_game_state.player->set_movement(glm::vec3(0.0f));
+    g_game_state.player->set_movement(glm::vec3(0.0f));
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -208,6 +225,11 @@ void process_input() {
                         g_game_is_running = false;
                         break;
 
+                    case SDLK_SPACE:
+                        // Jump
+                        if (g_game_state.player->m_collided_bottom) g_game_state.player->m_is_jumping = true;
+                        break;
+
                     default:
                         break;
                 }
@@ -221,21 +243,22 @@ void process_input() {
 
     if (key_state[SDL_SCANCODE_LEFT]) {
         g_game_state.player->move_left();
-        g_game_state.player->set_rotation(90.0f);
+        g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->LEFT];
     } else if (key_state[SDL_SCANCODE_RIGHT]) {
         g_game_state.player->move_right();
-        g_game_state.player->set_rotation(270.0f);
+        g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->RIGHT];
     } else if (key_state[SDL_SCANCODE_UP]) {
         g_game_state.player->move_up();
-        g_game_state.player->set_rotation(0.0f);
+        g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->UP];
     } else if (key_state[SDL_SCANCODE_DOWN]) {
-        // g_game_state.player->move_down();
+        g_game_state.player->move_down();
+        g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->DOWN];
     }
 
     // This makes sure that the player can't move faster diagonally
-    // if (glm::length(g_game_state.player->get_movement()) > 1.0f) {
-    //     g_game_state.player->set_movement(glm::normalize(g_game_state.player->get_movement()));
-    // }
+    if (glm::length(g_game_state.player->get_movement()) > 1.0f) {
+        g_game_state.player->set_movement(glm::normalize(g_game_state.player->get_movement()));
+    }
 }
 
 void update() {
@@ -257,7 +280,7 @@ void update() {
     // STEP 3: Once we exceed our fixed timestep, apply that elapsed time into the objects' update function invocation
     while (delta_time >= FIXED_TIMESTEP) {
         // Notice that we're using FIXED_TIMESTEP as our delta time
-        g_game_state.player->update(FIXED_TIMESTEP, g_game_state.asteroids, ASTEROID_COUNT, g_game_state.flag);
+        g_game_state.player->update(FIXED_TIMESTEP, g_game_state.platforms, PLATFORM_COUNT);
         delta_time -= FIXED_TIMESTEP;
     }
 
@@ -272,10 +295,7 @@ void render() {
     g_game_state.player->render(&g_shader_program);
 
     // ����� PLATFORM ����� //
-    for (int i = 0; i < ASTEROID_COUNT; i++) g_game_state.asteroids[i].render(&g_shader_program);
-
-    // ����� WIN FLAG ����� //
-    g_game_state.flag->render(&g_shader_program);
+    for (int i = 0; i < PLATFORM_COUNT; i++) g_game_state.platforms[i].render(&g_shader_program);
 
     // ����� GENERAL ����� //
     SDL_GL_SwapWindow(g_display_window);
